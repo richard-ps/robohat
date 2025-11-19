@@ -121,7 +121,7 @@ class FSM:
             angles[:8] = angles_degrees
             print("Servo angles (degrees):", angles)
             self.robohat.set_servo_multiple_angles(angles)
-            time.sleep(0.5)
+            time.sleep(5.0)
 
 
     def charger_found(self):
