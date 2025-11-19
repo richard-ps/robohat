@@ -10,6 +10,7 @@ from rpc.controller.na_cpg import NaCPG, create_fully_connected_adjacency
 import torch
 import matplotlib.pyplot as plt
 from SerTest import SerTestClass
+import time
 
 
 possible_states = ["WAIT", "ROAM", "TARGET_FOUND",
@@ -62,7 +63,7 @@ class FSM:
         elif self.state == "WALK":
             self.walk()
         elif self.state == "SEARCH":
-            self.battery_low()
+            self.search()
         elif self.state == "CHARGER_FOUND":
             self.charger_found()
 
@@ -89,25 +90,11 @@ class FSM:
         self.controller.set_param_with_dict(params)
 
         # b has been added, but not in use because current parameters were trained with previous version of NA CPG
-        
-        angles = self.controller.forward().tolist()
-        for _ in range(24): angles.append(0)
-         # Send angles to servo controller
-        self.servo_controller.__robohat.set_servo_multiple_angles(angles)
-
-        # Plotting the angle for visualization
-                
-        
-
-    
-
-        
-
-
-        
-
-
-
+        angles = [.0]*16  # Initialize with dummy values
+        while True:
+            angles[:8] = self.controller.forward().tolist()
+            self.servo_controller.__robohat.set_servo_multiple_angles(angles)
+            time.sleep(0.5)
 
 
     def charger_found(self):

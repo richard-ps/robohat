@@ -15,7 +15,7 @@ class ZeroMQClient:
         #  Socket to talk to server
         print("Connecting to hello world server…")
         self.socket = context.socket(zmq.REQ)
-        self.socket.connect("tcp://192.168.2.15:5556")
+        self.socket.connect("tcp://10.15.3.174:5556")
 
     def send_request(self, command):
         print(f"Sending command [{command}] …")
