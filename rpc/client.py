@@ -28,7 +28,7 @@ class ZeroMQClient:
 
     def run(self):
         commands = ["WAIT", "ROAM", "TARGET_FOUND",
-                    "WALK", "BATTERY_LOW", "CHARGER_FOUND"]
+                    "WALK", "SEARCH", "CHARGER_FOUND"]
         
         self.print_menu()
 
@@ -37,7 +37,7 @@ class ZeroMQClient:
             command = commands[command_index - 1]
 
             if command_index == 0:
-                    break
+                break
 
             if command_index not in range(1,7):
                 print("Invalid command. Please try again.")
@@ -51,6 +51,10 @@ class ZeroMQClient:
         print("2. ROAM")
         print("3. TARGET_FOUND")
         print("4. WALK")
-        print("5. BATTERY_LOW")
+        print("5. SEARCH")
         print("6. CHARGER_FOUND")
         print("0. Exit")
+
+if __name__ == "__main__":
+    client = ZeroMQClient()
+    client.run()
