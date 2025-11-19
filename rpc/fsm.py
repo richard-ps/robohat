@@ -9,9 +9,28 @@ from rpc.server import ZeroMQServer
 from rpc.controller.na_cpg import NaCPG, create_fully_connected_adjacency
 import torch
 import matplotlib.pyplot as plt
-from SerTest import SerTestClass
+# from SerTest import SerTestClass
 import time
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+try:
+    from robohatlib.Robohat import Robohat
+    from robohatlib import RobohatConstants
+    from robohatlib.hal.assemblyboard.PwmPlug import PwmPlug
+    from robohatlib import RobohatConfig
+    from robohatlib.hal.assemblyboard.ServoAssemblyConfig import ServoAssemblyConfig
+    from robohatlib.hal.assemblyboard.servo.ServoData import ServoData
+    from robohatlib.hal.datastructure.Color import Color
+    from robohatlib.hal.datastructure.ExpanderDirection import ExpanderDir
+    from robohatlib.hal.datastructure.ExpanderStatus import ExpanderStatus
+    from robohatlib.driver_ll.datastructs.IOStatus import IOStatus
+
+    from testlib import TestConfig
+
+except ImportError:
+    print("Failed to import all dependencies for SerTestClass")
+    raise
 
 possible_states = ["WAIT", "ROAM", "TARGET_FOUND",
                    "WALK", "SEARCH", "CHARGER_FOUND"]
@@ -19,8 +38,11 @@ possible_states = ["WAIT", "ROAM", "TARGET_FOUND",
 class FSM:
     def __init__(self):
         self.state = "WAIT"
-         # Setup the NaCPG controller
-        self.servo_controller = SerTestClass()
+
+        self.robohat = Robohat(TestConfig.SERVOASSEMBLY_1_CONFIG, TestConfig.SERVOASSEMBLY_2_CONFIG, TestConfig.TOPBOARD_ID_SWITCH)
+        self.robohat.init(TestConfig.SERVOBOARD_1_DATAS_LIST, TestConfig.SERVOBOARD_2_DATAS_LIST)
+        self.robohat.do_buzzer_beep()
+
         adj_dict = create_fully_connected_adjacency(8)
         self.controller = NaCPG(adj_dict, angle_tracking=True)
 
@@ -93,7 +115,7 @@ class FSM:
         angles = [.0]*16  # Initialize with dummy values
         while True:
             angles[:8] = self.controller.forward().tolist()
-            self.servo_controller.servo_move(angles)
+            self.robohat.set_servo_multiple_angles(angles)
             time.sleep(0.5)
 
 
