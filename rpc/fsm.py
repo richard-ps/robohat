@@ -101,7 +101,24 @@ class FSM:
         pass
 
     def walk(self):
-        pass
+        params = {'phase': [ 1.84770147,  0.63517527, -6.2581397 ,  5.79072771,  3.92560091,
+       -3.12365597, -5.64161065,  1.61769557], 'w': [ -3.82029392, -10.09482901,   7.54136557,  -9.10054186,
+        -9.74108929,  16.49676456,  22.68651804,  12.8404796 ], 'amplitudes': [ 0.41219116,  4.24333571, -4.81600483, -2.72279552,  3.86351227,
+        4.13802726, -5.23314684, -4.10500115], 'ha': [0.73259639, 0.84562198, 0.60696611, 0.74627439, 0.26942003,
+       0.16558826, 0.04662044, 0.05292187], 'b': [-20.68912344,  59.14947598,  50.71959856,  15.96840235,
+       -88.9128633 ,  33.98478395, -33.86570571,  85.19837797]}
+
+        self.controller.set_param_with_dict(params)
+
+        # b has been added, but not in use because current parameters were trained with previous version of NA CPG
+        angles = [.0]*16  # Initialize with dummy values
+        while True:
+            angles_radians = self.controller.forward(3000.0).tolist()
+            angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
+            angles[:8] = angles_degrees
+            print("Servo angles (degrees):", angles)
+            self.robohat.update_servo_data_direct(angles)
+            time.sleep(.1)
 
     def search(self):
         params = {'phase': [-6.28318531, -1.14581646,  0.44064909, -1.52731181,  1.43443942,
@@ -116,12 +133,12 @@ class FSM:
         # b has been added, but not in use because current parameters were trained with previous version of NA CPG
         angles = [.0]*16  # Initialize with dummy values
         while True:
-            angles_radians = self.controller.forward(50.0).tolist()
+            angles_radians = self.controller.forward(3000.0).tolist()
             angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
             angles[:8] = angles_degrees
             print("Servo angles (degrees):", angles)
             self.robohat.update_servo_data_direct(angles)
-            time.sleep(.5)
+            time.sleep(.1)
 
 
     def charger_found(self):
