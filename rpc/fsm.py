@@ -12,8 +12,6 @@ import matplotlib.pyplot as plt
 # from SerTest import SerTestClass
 import time
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 try:
     from robohatlib.Robohat import Robohat
     from robohatlib import RobohatConstants
@@ -60,6 +58,7 @@ class FSM:
         server = ZeroMQServer()
         
         while True:
+            print("Waiting for command from client...")
             command = server.listen()
             if command == "WAIT":
                 print("In WAIT state")
