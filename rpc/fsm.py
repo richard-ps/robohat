@@ -61,6 +61,8 @@ class FSM:
         while True:
             print("Waiting for command from client...")
             command = server.listen()
+
+            print("Received command:", command)
             if command == "WAIT":
                 print("In WAIT state")
             elif command == "ROAM":
