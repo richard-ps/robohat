@@ -120,7 +120,7 @@ class FSM:
             angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
             angles[:8] = angles_degrees
             print("Servo angles (degrees):", angles)
-            self.robohat.set_servo_multiple_angles(angles)
+            self.robohat.update_servo_data_direct(angles)
             time.sleep(5.0)
 
 
