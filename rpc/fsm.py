@@ -70,7 +70,7 @@ class FSM:
             elif command == "TARGET_FOUND":
                 print("In TARGET_FOUND state")
             elif command == "WALK":
-                print("In WALK state")
+                self.walk()
             elif command == "SEARCH":
                 print("In SEARCH state")
                 self.search()
@@ -122,7 +122,7 @@ class FSM:
             self.robohat.update_servo_data_direct(angles)
             update_count += 1
             time.sleep(.1)
-            if update_count % 10 == 0:
+            if update_count % 50 == 0:
                 return
 
     def search(self):
@@ -147,7 +147,7 @@ class FSM:
             self.robohat.update_servo_data_direct(angles)
             update_count += 1
             time.sleep(.1)
-            if update_count % 10 == 0:
+            if update_count % 50 == 0:
                 return
 
 
