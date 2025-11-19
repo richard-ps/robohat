@@ -93,7 +93,7 @@ class FSM:
         angles = [.0]*16  # Initialize with dummy values
         while True:
             angles[:8] = self.controller.forward().tolist()
-            self.servo_controller.__servo_move(angles)
+            self.servo_controller.servo_move(angles)
             time.sleep(0.5)
 
 
