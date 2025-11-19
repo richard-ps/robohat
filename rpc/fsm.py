@@ -140,13 +140,13 @@ class FSM:
 
         # update_count = 0
         while True:
-            angles_radians = self.controller.forward(6000.0).tolist()
+            angles_radians = self.controller.forward(3000.0).tolist()
             angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
             angles[:8] = angles_degrees
             print("Servo angles (degrees):", angles)
             self.robohat.update_servo_data_direct(angles)
             # update_count += 1
-            #time.sleep(.)
+            time.sleep(.1)
             # if update_count % 50 == 0:
             #     return
 
