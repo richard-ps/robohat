@@ -28,7 +28,7 @@ class ZeroMQClient:
 
     def run(self):
         commands = ["WAIT", "ROAM", "TARGET_FOUND",
-                    "WALK", "SEARCH", "CHARGER_FOUND"]
+                    "WALK", "SEARCH", "CHARGER_FOUND", "EXIT"]
         
         self.print_menu()
 
