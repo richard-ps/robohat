@@ -138,17 +138,17 @@ class FSM:
         # b has been added, but not in use because current parameters were trained with previous version of NA CPG
         angles = [.0]*16  # Initialize with dummy values
 
-        update_count = 0
+        # update_count = 0
         while True:
             angles_radians = self.controller.forward(3000.0).tolist()
             angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
             angles[:8] = angles_degrees
             print("Servo angles (degrees):", angles)
             self.robohat.update_servo_data_direct(angles)
-            update_count += 1
+            # update_count += 1
             time.sleep(.1)
-            if update_count % 50 == 0:
-                return
+            # if update_count % 50 == 0:
+            #     return
 
 
     def charger_found(self):
