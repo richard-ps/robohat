@@ -11,6 +11,7 @@ import torch
 import matplotlib.pyplot as plt
 # from SerTest import SerTestClass
 import time
+import math
 
 try:
     from robohatlib.Robohat import Robohat
@@ -113,7 +114,9 @@ class FSM:
         # b has been added, but not in use because current parameters were trained with previous version of NA CPG
         angles = [.0]*16  # Initialize with dummy values
         while True:
-            angles[:8] = self.controller.forward().tolist()
+            angles_radians = self.controller.forward().tolist()
+            angles = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
+            angles[:8] = angles
             self.robohat.set_servo_multiple_angles(angles)
             time.sleep(0.5)
 
