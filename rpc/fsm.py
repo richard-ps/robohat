@@ -146,7 +146,7 @@ class FSM:
             print("Servo angles (degrees):", angles)
             self.robohat.update_servo_data_direct(angles)
             # update_count += 1
-            time.sleep(.1)
+            time.sleep(.25)
             # if update_count % 50 == 0:
             #     return
 
