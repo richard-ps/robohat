@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 # from SerTest import SerTestClass
 import time
 import math
+import pdb
+from copy import deepcopy
 
 try:
     from robohatlib.Robohat import Robohat
@@ -101,30 +103,41 @@ class FSM:
         pass
 
     def walk(self):
-        params = {'phase': [ 1.84770147,  0.63517527, -6.2581397 ,  5.79072771,  3.92560091,
-       -3.12365597, -5.64161065,  1.61769557], 'w': [ -3.82029392, -10.09482901,   7.54136557,  -9.10054186,
-        -9.74108929,  16.49676456,  22.68651804,  12.8404796 ], 'amplitudes': [ 0.41219116,  4.24333571, -4.81600483, -2.72279552,  3.86351227,
-        4.13802726, -5.23314684, -4.10500115], 'ha': [0.73259639, 0.84562198, 0.60696611, 0.74627439, 0.26942003,
-       0.16558826, 0.04662044, 0.05292187], 'b': [-20.68912344,  59.14947598,  50.71959856,  15.96840235,
-       -88.9128633 ,  33.98478395, -33.86570571,  85.19837797]}
+        #params = {'phase': [ 1.84770147,  0.63517527, -6.2581397 ,  5.79072771,  3.92560091,
+       #-3.12365597, -5.64161065,  1.61769557], 'w': [ -3.82029392, -10.09482901,   7.54136557,  -9.10054186,
+       # -9.74108929,  16.49676456,  22.68651804,  12.8404796 ], 'amplitudes': [ 0.41219116,  4.24333571, -4.81600483, -2.72279552,  3.86351227,
+       # 4.13802726, -5.23314684, -4.10500115], 'ha': [0.73259639, 0.84562198, 0.60696611, 0.74627439, 0.26942003,
+       #0.16558826, 0.04662044, 0.05292187], 'b': [-20.68912344,  59.14947598,  50.71959856,  15.96840235,
+       #-88.9128633 ,  33.98478395, -33.86570571,  85.19837797]}
+
+        params = {'phase': [-6.28318531,  6.28318531,  0.47379837,  6.28318531, -1.01466379, 6.28318531, -0.53651186, -6.28318531], 'w': [ 25.13274123,  -4.65737525, -12.56637061,  -2.73507415,
+       -0.36040327,   0.13695773, -12.56637061,  -0.17071314], 'amplitudes': [-0.17184973, -6.28318531, -6.28318531, -0.47228612, -0.97673394,
+       3.05915668,  6.28318531,  6.28318531], 'ha': [0., 0., 0., 0., 0., 0., 0., 0.], 'b': [ 100.       ,  100.       ,  100.       ,  100.       ,
+       -100.       ,  100.       ,    5.1925288,  100.       ]}
 
         self.controller.set_param_with_dict(params)
 
-        # b has been added, but not in use because current parameters were trained with previous version of NA CPG
         angles = [.0]*16  # Initialize with dummy values
-
-        update_count = 0
+        # b has been added, but not in use because current parameters were trained with previous version of NA CPG
+        buf = 50
+        # update_count = 0
+        first_angles = None
         while True:
-            angles_radians = self.controller.forward(3000.0).tolist()
-            angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
-            angles[:8] = angles_degrees
-            print("Servo angles (degrees):", angles)
-            self.robohat.update_servo_data_direct(angles)
-            update_count += 1
-            time.sleep(.1)
-            if update_count % 50 == 0:
-                return
-
+            angle_buffer = []
+            for j in range(buf):
+                for _ in range(20):
+                    angles_radians = self.controller.forward(1.0).tolist()
+                    angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
+                    #angles_degrees[0:2], angles_degrees[2:4] = angles_degrees[4:6], angles_degrees[6:8]
+                    #angles_degrees[0:2], angles_degrees[2:4] = angles_degrees[6:8], angles_degrees[4:6]
+                    angles[0:2], angles[2:4], angles[4:6], angles[6:8] = angles_degrees[4:6], angles_degrees[2:4], angles_degrees[0:2], angles_degrees[6:8]
+                angle_buffer.append(deepcopy(angles))
+            for i in range(100*buf):
+                l = i % buf
+                print("Servo angles (degrees):", angle_buffer[l])
+                self.robohat.update_servo_data_direct(angle_buffer[l])
+                time.sleep(0.05)
+ 
     def search(self):
         params = {'phase': [-6.28318531, -1.14581646,  0.44064909, -1.52731181,  1.43443942,
         6.28318531,  4.0185173 ,  6.28318531], 'w': [ -1.70297506, -11.52369599,   1.03248715,  -3.81787687,
@@ -135,18 +148,25 @@ class FSM:
 
         self.controller.set_param_with_dict(params)
 
-        # b has been added, but not in use because current parameters were trained with previous version of NA CPG
         angles = [.0]*16  # Initialize with dummy values
-
+        # b has been added, but not in use because current parameters were trained with previous version of NA CPG
+        buf = 50
         # update_count = 0
         while True:
-            angles_radians = self.controller.forward(1000.0).tolist()
-            angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
-            angles[:8] = angles_degrees
-            print("Servo angles (degrees):", angles)
-            self.robohat.update_servo_data_direct(angles)
+            angle_buffer = []
+            for j in range(buf):
+                for i in range(20):
+                    angles_radians = self.controller.forward(1.0).tolist()
+                    angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
+                    angles[:8] = angles_degrees
+                angle_buffer.append(deepcopy(angles))
+
+            for i in range(100*buf):
+                l = i % buf
+                print("Servo angles (degrees):", angle_buffer[l])
+                self.robohat.update_servo_data_direct(angle_buffer[l])
+                time.sleep(0.05)
             # update_count += 1
-            time.sleep(.1)
             # if update_count % 50 == 0:
             #     return
 
