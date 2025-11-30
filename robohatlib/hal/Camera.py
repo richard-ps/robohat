@@ -18,7 +18,7 @@ from numpy.typing import NDArray
     # --------------------------------------------------------------------------------------
 
 class Camera:
-    def __init__(self, cam_res: tuple[int, int] = (160, 120)):
+    def __init__(self, cam_res: tuple[int, int] = (1440, 1440)):
         """!
         Constructor of the Camera class
         """
@@ -32,12 +32,13 @@ class Camera:
         try:
             self.picam2 = Picamera2()
             self.picam2.set_logging(Picamera2.ERROR)
-
-            camera_config = self.picam2.create_video_configuration(main={"size": (cam_res[0], cam_res[1])})
+            full_res=self.picam2.sensor_resolution
+            camera_config = self.picam2.create_video_configuration(main={"size": full_res, "format": "RGB888"})
             self.__conf: CameraConfiguration = camera_config
 
             self.picam2.configure(self.__conf)
-            self.picam2.start_preview(Preview.NULL)
+            #self.picam2.start_preview(Preview.NULL)
+            self.picam2.configure("preview")
             self.picam2.start()
             tm.sleep(1)
             # self.picam2.close()

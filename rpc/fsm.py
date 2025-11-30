@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 import time
 import math
 import pdb
+import cv2
+import numpy as np
+from picamera2 import Picamera2
 from copy import deepcopy
 
 try:
@@ -43,6 +46,14 @@ class FSM:
         self.robohat = Robohat(TestConfig.SERVOASSEMBLY_1_CONFIG, TestConfig.SERVOASSEMBLY_2_CONFIG, TestConfig.TOPBOARD_ID_SWITCH)
         self.robohat.init(TestConfig.SERVOBOARD_1_DATAS_LIST, TestConfig.SERVOBOARD_2_DATAS_LIST)
         self.robohat.do_buzzer_beep()
+        
+        self.picam2 = Picamera2()
+        self.picam2.preview_configuration.main.format = "RGB888"
+        self.picam2.configure("preview")
+        self.picam2.start()
+
+        self.target_color_max = np.array([175,50,20], np.uint8)
+        self.target_color_min = np.array([180,255,255], np.uint8)
 
         adj_dict = create_fully_connected_adjacency(8)
         self.controller = NaCPG(adj_dict, angle_tracking=True)
@@ -128,11 +139,9 @@ class FSM:
                 for _ in range(20):
                     angles_radians = self.controller.forward(1.0).tolist()
                     angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
-                    #angles_degrees[0:2], angles_degrees[2:4] = angles_degrees[4:6], angles_degrees[6:8]
-                    #angles_degrees[0:2], angles_degrees[2:4] = angles_degrees[6:8], angles_degrees[4:6]
                     angles[0:2], angles[2:4], angles[4:6], angles[6:8] = angles_degrees[4:6], angles_degrees[2:4], angles_degrees[0:2], angles_degrees[6:8]
                 angle_buffer.append(deepcopy(angles))
-            for i in range(100*buf):
+            for i in range(5*5*5*5*5*buf):
                 l = i % buf
                 print("Servo angles (degrees):", angle_buffer[l])
                 self.robohat.update_servo_data_direct(angle_buffer[l])
@@ -152,23 +161,79 @@ class FSM:
         # b has been added, but not in use because current parameters were trained with previous version of NA CPG
         buf = 50
         # update_count = 0
+        
+        angle_buffer = []
+        for j in range(buf):
+            for i in range(20):
+                angles_radians = self.controller.forward(1.0).tolist()
+                angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
+                angles[:8] = angles_degrees
+            angle_buffer.append(deepcopy(angles))
+            
         while True:
-            angle_buffer = []
-            for j in range(buf):
-                for i in range(20):
-                    angles_radians = self.controller.forward(1.0).tolist()
-                    angles_degrees = [int((angle + math.pi) / (2 * math.pi) * 180) for angle in angles_radians]
-                    angles[:8] = angles_degrees
-                angle_buffer.append(deepcopy(angles))
-
-            for i in range(100*buf):
+            for i in range(buf):
                 l = i % buf
                 print("Servo angles (degrees):", angle_buffer[l])
                 self.robohat.update_servo_data_direct(angle_buffer[l])
                 time.sleep(0.05)
-            # update_count += 1
-            # if update_count % 50 == 0:
-            #     return
+            
+            print("------------CAMERA STEP!---------")
+            #picam2 = self.robohat.get_camera()
+            #im = picam2.get_capture_array()
+            im = self.picam2.capture_array()
+            height, width = im.shape[:2]  # Get height and width of one frame
+            image_center_x = width // 2
+            image_center_y = height // 2
+            hsv_frame = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+
+            # Lower range for red (0 to 10)
+            lower = np.array([100,100,70])
+            upper = np.array([130,255,255])
+            blue_mask = cv2.inRange(hsv_frame, lower, upper)
+
+            # Upper range for red (160 to 179)
+            #lower_red2 = np.array([140, 50, 50])
+            #upper_red2 = np.array([179, 255, 255])
+            #mask2 = cv2.inRange(hsv_frame, lower_red2, upper_red2)
+
+            # Combine the two masks to get the final red mask
+            #red_mask = mask1 + mask2
+            # Apply an optional morphological operation (e.g., erosion/dilation) to clean the mask
+            kernel = np.ones((5, 5), "uint8")
+            blue_mask = cv2.dilate(blue_mask, kernel)
+            contours, _ = cv2.findContours(blue_mask, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+            if contours:
+                largest_contour = max(contours, key=cv2.contourArea)
+                area = cv2.contourArea(largest_contour)
+
+                if area > 400:
+                    print("------- CONTOUR FOUND ----------")
+                    x, y, w, h = cv2.boundingRect(largest_contour)
+                    cv2.rectangle(im, (x, y), (x+w, y+h), (0, 0, 255), 2)
+                    cv2.imwrite("image.png", im)
+                    cv2.imwrite("mask.png", blue_mask)
+                    center_x = x + w // 2
+                    center_y = y + h // 2
+                    tolerance = 250
+
+                    # Check if the rectangle is centered
+                    is_centered_x = abs(center_x - image_center_x) <= tolerance
+                    #is_centered_y = abs(center_y - image_center_y) <= tolerance
+
+                    if is_centered_x:
+                        print("Rectangle is centered.")
+                        for i in range(buf):
+                            l = i % buf
+                            self.robohat.update_servo_data_direct(angle_buffer[l])
+                            time.sleep(0.05)
+                        self.picam2.stop()
+                        self.walk()
+                        return
+                    else:
+                        print("Rectangle is NOT centered.")
+
+                    # Optional: Print the deviation for feedback
+                    print(f"Deviation X: {abs(center_x - image_center_x)}, Deviation Y: {abs(center_y - image_center_y)}")
 
 
     def charger_found(self):

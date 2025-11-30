@@ -124,7 +124,7 @@ class Robohat:
         self.__led = LedMulticolor(self.__io_handler, RobohatConfig.STATUS_LED_DEF)
         self.__imu = IMU(self.__io_handler, RobohatConfig.IMU_DEF)
 
-        self.__camera = Camera()
+        #self.__camera = Camera()
 
         #-------------------------------------Expander
         topboard_io_expander_def = RobohatConfig.TOPBOARD_IO_EXPANDER_DEF
@@ -208,7 +208,7 @@ class Robohat:
         self.__buzzer.init_buzzer()
         self.__led.init_led()
         self.__imu.init_imu()
-        self.__camera.init_camera()
+        #self.__camera.init_camera()
 
         self.__topboard_io_expander.init_io_expander()
         self.__topboard_adc.init_topboard_adc()
